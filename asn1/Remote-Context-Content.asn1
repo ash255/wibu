@@ -1,0 +1,31 @@
+REMOTE-CONTEXT-CONTENT DEFINITIONS ::= BEGIN
+
+Remote-Context-Content ::= [PRIVATE 93] IMPLICIT SEQUENCE
+{
+    sw-specs[PRIVATE 161] IMPLICIT Software-Specs,
+    clocks[PRIVATE 100] IMPLICIT Clocks OPTIONAL,
+    content-id[PRIVATE 6] IMPLICIT OBJECT IDENTIFIER,
+    content-val[PRIVATE 101] EXPLICIT ANY
+}
+Software-Specs ::= [PRIVATE 161] IMPLICIT SEQUENCE 
+{
+    creator-name[PRIVATE 181] IMPLICIT UTF8String,
+    creator-version[PRIVATE 165] IMPLICIT Format-Version,
+    required-version[PRIVATE 122] IMPLICIT Format-Version
+}
+Format-Version ::= [PRIVATE 122] IMPLICIT SEQUENCE 
+{
+    sfl[PRIVATE 78] IMPLICIT UInt8,
+    sfh[PRIVATE 84] IMPLICIT UInt8,
+    feature-flags[PRIVATE 32] IMPLICIT UInt32
+}
+UInt8 ::= [PRIVATE 31] IMPLICIT INTEGER 
+UInt32 ::= [PRIVATE 34] IMPLICIT INTEGER 
+Clocks ::= [PRIVATE 100] IMPLICIT SEQUENCE 
+{
+    box-time[PRIVATE 178] IMPLICIT Seconds-Since-2000,
+    certified-time[PRIVATE 179] IMPLICIT Seconds-Since-2000
+}
+Seconds-Since-2000 ::= [PRIVATE 180] IMPLICIT INTEGER 
+
+END

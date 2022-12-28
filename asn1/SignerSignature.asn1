@@ -1,0 +1,8 @@
+SIGNERSIGNATURE DEFINITIONS ::= BEGIN
+SignerSignature ::= SEQUENCE
+{
+    r INTEGER,
+    s INTEGER
+}
+
+END

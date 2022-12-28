@@ -1,0 +1,95 @@
+WIBU-FILE DEFINITIONS ::= BEGIN
+Wibu-File ::= CHOICE
+{
+    signed[0] IMPLICIT Wibu-File-Signed,
+    envelope[1] IMPLICIT Wibu-File-Enveloped
+}
+Wibu-File-Signed ::= SEQUENCE
+{
+    contentType ContentType,
+    content[0] EXPLICIT SignedData
+}
+ContentType ::= OBJECT IDENTIFIER
+SignedData ::= SEQUENCE
+{
+    version VersionPKCS7,
+    digestAlgorithms DigestAlgorithmIdentifiers,
+    contentInfo ContentInfo,
+    certificates[0] IMPLICIT ExtendedCertificatesAndCertificates OPTIONAL,
+    crls[1] IMPLICIT CertificateRevocationLists OPTIONAL,
+    signerInfos SignerInfos
+}
+VersionPKCS7 ::= INTEGER
+DigestAlgorithmIdentifiers ::= SET OF DigestAlgorithmIdentifier
+DigestAlgorithmIdentifier ::= SEQUENCE OF OBJECT IDENTIFIER
+ContentInfo ::= SEQUENCE
+{
+    contentType ContentType,
+    content[0] EXPLICIT ANY OPTIONAL
+}
+ExtendedCertificatesAndCertificates ::= SET OF ExtendedCertificateOrCertificate
+ExtendedCertificateOrCertificate ::= ANY
+CertificateRevocationLists ::= SET
+{
+    dummy INTEGER
+}
+
+SignerInfos ::= SET OF SignerInfo
+SignerInfo ::= SEQUENCE
+{
+    version VersionPKCS7,
+    signerIdentifier SignerIdentifier,
+    digestAlgorithm DigestAlgorithmIdentifier,
+    authenticatedAttributes[0] IMPLICIT Attributes OPTIONAL,
+    digestEncryptionAlgorithm DigestEncryptionAlgorithmIdentifier,
+    encryptedDigest EncryptedDigest,
+    unauthenticatedAttributes[1] IMPLICIT Attributes OPTIONAL
+}
+SignerIdentifier ::= CHOICE
+{
+    subjectKeyIdentifier[2] IMPLICIT SubjectKeyIdentifier
+}
+SubjectKeyIdentifier ::= OCTET STRING
+
+Attributes ::= SET OF Attribute7
+Attribute7 ::= SEQUENCE
+{
+    type OBJECT IDENTIFIER,
+    values Values,
+    valuesWithContext ValuesWithContext OPTIONAL
+}
+Values ::= SET OF ANY
+ValuesWithContext ::= SET OF ANY
+DigestEncryptionAlgorithmIdentifier ::= SEQUENCE OF OBJECT IDENTIFIER
+EncryptedDigest ::= OCTET STRING
+Wibu-File-Enveloped ::= SEQUENCE
+{
+    contentType ContentType,
+    content[0] EXPLICIT EnvelopedData
+}
+EnvelopedData ::= SEQUENCE
+{
+    version VersionPKCS7,
+    recipientInfos RecipientInfos,
+    encryptedContentInfo EncryptedContentInfo
+}
+RecipientInfos ::= SET OF RecipientInfo
+RecipientInfo ::= SEQUENCE
+{
+    version VersionPKCS7,
+    signerIdentifier SignerIdentifier,
+    keyEncryptionAlgorithm KeyEncryptionAlgorithmIdentifier,
+    encryptedKey EncryptedKey
+}
+KeyEncryptionAlgorithmIdentifier ::= SEQUENCE OF OBJECT IDENTIFIER
+EncryptedKey ::= OCTET STRING
+EncryptedContentInfo ::= SEQUENCE
+{
+    contentType ContentType,
+    contentEncryptionAlgorithm ContentEncryptionAlgorithmIdentifier,
+    encryptedContent[0] IMPLICIT EncryptedContent OPTIONAL
+}
+ContentEncryptionAlgorithmIdentifier ::= SEQUENCE OF OBJECT IDENTIFIER
+EncryptedContent ::= OCTET STRING
+
+END

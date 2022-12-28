@@ -1,0 +1,41 @@
+CONTENT-FI-P DEFINITIONS ::= BEGIN
+
+
+Content-FI-P ::= [PRIVATE 58] IMPLICIT SEQUENCE
+{
+    format-version[PRIVATE 122] IMPLICIT Format-Version,
+    hardware-id[PRIVATE 77] EXPLICIT Hardware-ID,
+    firm-code[PRIVATE 114] IMPLICIT Firm-Code,
+    firmitem-id[PRIVATE 87] IMPLICIT Firmitem-ID,
+    firmitem-id-of-updated-fi-p[PRIVATE 182] IMPLICIT Firmitem-ID OPTIONAL,
+    allow-to-pull[PRIVATE 183] IMPLICIT BOOLEAN,
+    hashing-salt[PRIVATE 61] IMPLICIT Hashing-Salt,
+    fi-dynamic-hash[PRIVATE 69] IMPLICIT Dynamic-Data-Hash
+}
+Format-Version ::= [PRIVATE 122] IMPLICIT SEQUENCE 
+{
+    sfl[PRIVATE 78] IMPLICIT UInt8,
+    sfh[PRIVATE 84] IMPLICIT UInt8,
+    feature-flags[PRIVATE 32] IMPLICIT UInt32
+}
+UInt8 ::= [PRIVATE 31] IMPLICIT INTEGER
+UInt32 ::= [PRIVATE 34] IMPLICIT INTEGER
+Hardware-ID ::= CHOICE
+{
+    cmact-machine-id[PRIVATE 126] IMPLICIT CmActSerial-ID,
+    dongle-serial-number[PRIVATE 167] IMPLICIT Serial-Number
+}
+CmActSerial-ID ::= [PRIVATE 126] IMPLICIT OCTET STRING 
+Serial-Number ::= [PRIVATE 159] IMPLICIT SEQUENCE 
+{
+    mask[PRIVATE 142] IMPLICIT Mask,
+    serial[PRIVATE 143] IMPLICIT Serial
+}
+Mask ::= [PRIVATE 142] IMPLICIT INTEGER 
+Serial ::= [PRIVATE 143] IMPLICIT INTEGER 
+Firm-Code ::= [PRIVATE 114] IMPLICIT INTEGER 
+Firmitem-ID ::= [PRIVATE 87] IMPLICIT OCTET STRING 
+Hashing-Salt ::= [PRIVATE 61] IMPLICIT OCTET STRING 
+Dynamic-Data-Hash ::= [PRIVATE 69] IMPLICIT OCTET STRING 
+
+END

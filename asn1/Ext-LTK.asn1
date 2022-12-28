@@ -1,0 +1,31 @@
+EXT-LTK DEFINITIONS ::= BEGIN
+
+Ext-LTK ::= [PRIVATE 119] IMPLICIT SEQUENCE
+{
+    firm-code[PRIVATE 114] IMPLICIT INTEGER,
+    fi-transfer-allowed[PRIVATE 194] IMPLICIT BOOLEAN,
+    pull-allowed[PRIVATE 195] IMPLICIT BOOLEAN,
+    allowed-transfer-types[PRIVATE 121] IMPLICIT Transfer-Type-Flag-List,
+    allowed-target-container-types[PRIVATE 120] IMPLICIT Target-Container-Types,
+    allowed-transfer-depth[PRIVATE 32] IMPLICIT INTEGER,
+    return-allowed[PRIVATE 193] IMPLICIT BOOLEAN,
+    allowed-ltk-container-types[PRIVATE 226] IMPLICIT Target-Container-Types
+}
+Transfer-Type-Flag-List ::= [PRIVATE 121] IMPLICIT SET OF [PRIVATE 145] EXPLICIT Transfer-Type-Flag
+Transfer-Type-Flag ::= CHOICE 
+{
+    move-complete[PRIVATE 151] IMPLICIT NULL,
+    move-units[PRIVATE 152] IMPLICIT NULL,
+    move-licenses[PRIVATE 153] IMPLICIT NULL,
+    borrow-local-license[PRIVATE 154] IMPLICIT NULL,
+    borrow-complete[PRIVATE 147] IMPLICIT NULL,
+    none[PRIVATE 166] IMPLICIT NULL
+}
+Target-Container-Types ::= [PRIVATE 120] IMPLICIT SEQUENCE 
+{
+    cmact[PRIVATE 221] IMPLICIT BOOLEAN,
+    cmdongle[PRIVATE 222] IMPLICIT BOOLEAN,
+    cmcloud[PRIVATE 223] IMPLICIT BOOLEAN
+}
+
+END

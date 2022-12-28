@@ -1,0 +1,66 @@
+CERTIFICATE DEFINITIONS ::= BEGIN
+Certificate ::= SEQUENCE
+{
+    tbsCertificate TBSCertificate,
+    signatureAlgorithm AlgorithmIdentifier,
+    signature BIT STRING
+}
+TBSCertificate ::= SEQUENCE
+{
+    version[0] EXPLICIT Version OPTIONAL,
+    serialNumber CertificateSerialNumber,
+    signature AlgorithmIdentifier,
+    issuer Name,
+    validity Validity,
+    subject Name,
+    subjectPublicKeyInfo SubjectPublicKeyInfo,
+    issuerUniqueID[1] IMPLICIT UniqueIdentifier OPTIONAL,
+    subjectUniqueID[2] IMPLICIT UniqueIdentifier OPTIONAL,
+    extensions[3] EXPLICIT Extensions OPTIONAL
+}
+Version ::= INTEGER
+CertificateSerialNumber ::= INTEGER
+AlgorithmIdentifier ::= SEQUENCE
+{
+    algorithm OBJECT IDENTIFIER,
+    parameters ANY OPTIONAL
+}
+Name ::= CHOICE
+{
+    rdnSequence RDNSequence
+}
+RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
+RelativeDistinguishedName ::= SET OF AttributeTypeAndValue
+AttributeTypeAndValue ::= SEQUENCE
+{
+    type AttributeType,
+    value AttributeValue
+}
+AttributeType ::= OBJECT IDENTIFIER
+AttributeValue ::= UTF8String
+
+Validity ::= SEQUENCE
+{
+    notBefore Time,
+    notAfter Time
+}
+Time ::= CHOICE
+{
+    utcTime UTCTime,
+    generalTime GeneralizedTime
+}
+SubjectPublicKeyInfo ::= SEQUENCE
+{
+    algorithm AlgorithmIdentifier,
+    subjectPublicKey BIT STRING
+}
+UniqueIdentifier ::= BIT STRING
+Extensions ::= SEQUENCE OF Extension
+Extension ::= SEQUENCE
+{
+    extnID OBJECT IDENTIFIER,
+    critical BOOLEAN OPTIONAL,
+    extnValue OCTET STRING
+}
+
+END

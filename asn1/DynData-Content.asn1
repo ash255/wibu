@@ -1,0 +1,248 @@
+DYNDATA-CONTENT DEFINITIONS ::= BEGIN
+DynData-Content ::= [PRIVATE 230] IMPLICIT SEQUENCE
+{
+    sw-specs[PRIVATE 161] IMPLICIT Software-Specs,
+    cmact-serial-id[PRIVATE 126] IMPLICIT CmActSerial-ID,
+    clocks[PRIVATE 100] IMPLICIT Clocks,
+    tag[PRIVATE 34] IMPLICIT UInt32,
+    fi-dynamic[PRIVATE 62] IMPLICIT Content-FI-Dynamic OPTIONAL,
+    pi-dynamics[PRIVATE 117] IMPLICIT Content-PI-Dynamic-List
+}
+Software-Specs ::= [PRIVATE 161] IMPLICIT SEQUENCE 
+{
+    creator-name[PRIVATE 181] IMPLICIT UTF8String,
+    creator-version[PRIVATE 165] IMPLICIT Format-Version,
+    required-version[PRIVATE 122] IMPLICIT Format-Version
+}
+Format-Version ::= [PRIVATE 122] IMPLICIT SEQUENCE 
+{
+    sfl[PRIVATE 78] IMPLICIT UInt8,
+    sfh[PRIVATE 84] IMPLICIT UInt8,
+    feature-flags[PRIVATE 32] IMPLICIT UInt32
+}
+UInt8 ::= [PRIVATE 31] IMPLICIT INTEGER 
+UInt32 ::= [PRIVATE 34] IMPLICIT INTEGER 
+CmActSerial-ID ::= [PRIVATE 126] IMPLICIT OCTET STRING 
+Clocks ::= [PRIVATE 100] IMPLICIT SEQUENCE 
+{
+    box-time[PRIVATE 178] IMPLICIT Seconds-Since-2000,
+    certified-time[PRIVATE 179] IMPLICIT Seconds-Since-2000
+}
+Seconds-Since-2000 ::= [PRIVATE 180] IMPLICIT INTEGER 
+Content-FI-Dynamic ::= [PRIVATE 62] IMPLICIT SEQUENCE 
+{
+    fi-update-counter[PRIVATE 187] IMPLICIT UInt32,
+    fi-access-counter[PRIVATE 188] IMPLICIT UInt16,
+    fi-lt-update-counter[PRIVATE 189] IMPLICIT UInt32,
+    fi-last-cleanup-ltuc[PRIVATE 225] IMPLICIT UInt32,
+    fi-text[PRIVATE 191] IMPLICIT Item-Text,
+    fi-firm-key[PRIVATE 185] IMPLICIT Private-Key,
+    fi-private-ltk[PRIVATE 186] IMPLICIT Private-Key OPTIONAL
+}
+UInt16 ::= [PRIVATE 32] IMPLICIT INTEGER 
+Item-Text ::= [PRIVATE 116] IMPLICIT BMPString 
+Private-Key ::= [PRIVATE 72] IMPLICIT OCTET STRING 
+Content-PI-Dynamic-List ::= [PRIVATE 117] IMPLICIT SEQUENCE OF [PRIVATE 73] EXPLICIT Content-PI-Dynamic
+Content-PI-Dynamic ::= [PRIVATE 73] IMPLICIT SEQUENCE 
+{
+    pi-dynamic[PRIVATE 75] IMPLICIT Dynamic-Pios
+}
+Dynamic-Pios ::= [PRIVATE 75] IMPLICIT SEQUENCE 
+{
+    item-reference[PRIVATE 88] IMPLICIT Pio-ItemReference,
+    pi-pisk[PRIVATE 35] IMPLICIT PISK,
+    pi-featuremap[PRIVATE 37] IMPLICIT Pio-FeatureMap OPTIONAL,
+    pi-text[PRIVATE 38] IMPLICIT Pio-Text OPTIONAL,
+    pi-userdata[PRIVATE 39] IMPLICIT Pio-UserData OPTIONAL,
+    pi-unitcounter[PRIVATE 40] IMPLICIT Pio-UnitCounter OPTIONAL,
+    pi-usageperiod[PRIVATE 41] IMPLICIT Pio-UsagePeriod OPTIONAL,
+    pi-activationtime[PRIVATE 42] IMPLICIT Pio-ActivationTime OPTIONAL,
+    pi-expirationtime[PRIVATE 43] IMPLICIT Pio-ExpirationTime OPTIONAL,
+    pi-protdata[PRIVATE 44] IMPLICIT Pio-ProtectedData OPTIONAL,
+    pi-maintenanceperiod[PRIVATE 47] IMPLICIT Pio-MaintenancePeriod OPTIONAL,
+    pi-licensequantity[PRIVATE 55] IMPLICIT Pio-LicenseQuantity OPTIONAL,
+    pi-transferinfo[PRIVATE 54] IMPLICIT Pio-TransferInfo OPTIONAL,
+    pi-borrow-expirationtime[PRIVATE 57] IMPLICIT Pio-BorrowExpirationTime OPTIONAL,
+    pi-privateltk[PRIVATE 68] IMPLICIT Pio-Private-Ltk OPTIONAL,
+    pi-status[PRIVATE 70] IMPLICIT Pio-Status OPTIONAL,
+    list-pi-secretdata[PRIVATE 82] IMPLICIT PI-Secret-Data-List,
+    list-pi-hiddendata[PRIVATE 83] IMPLICIT PI-Hidden-Data-List,
+    list-pi-extprotdata[PRIVATE 91] IMPLICIT ExtendedProtectedDatas,
+    pi-delay[PRIVATE 162] IMPLICIT Pio-Delay OPTIONAL,
+    pi-password[PRIVATE 163] IMPLICIT Pio-Password OPTIONAL,
+    list-pi-history[PRIVATE 76] IMPLICIT HistoryPios,
+    pi-dynamics-for-moduleitems[PRIVATE 74] IMPLICIT Dynamic-Pios-List OPTIONAL
+}
+Pio-ItemReference ::= [PRIVATE 88] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    reference[PRIVATE 32] IMPLICIT UInt16
+}
+Tvb-Control ::= [PRIVATE 71] IMPLICIT SEQUENCE 
+{
+    data[PRIVATE 1] IMPLICIT BOOLEAN,
+    serial[PRIVATE 1] IMPLICIT BOOLEAN,
+    update-counter[PRIVATE 1] IMPLICIT BOOLEAN,
+    attribute[PRIVATE 205] IMPLICIT Tvb-Attributes OPTIONAL
+}
+Tvb-Attributes ::= [PRIVATE 205] IMPLICIT INTEGER 
+PISK ::= [PRIVATE 35] IMPLICIT OCTET STRING 
+Pio-FeatureMap ::= [PRIVATE 37] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    featuremap[PRIVATE 34] IMPLICIT UInt32
+}
+Pio-Text ::= [PRIVATE 38] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    text[PRIVATE 116] IMPLICIT Item-Text
+}
+Pio-UserData ::= [PRIVATE 39] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    data[PRIVATE 50] IMPLICIT Byte-Array256
+}
+Byte-Array256 ::= [PRIVATE 50] IMPLICIT OCTET STRING 
+Pio-UnitCounter ::= [PRIVATE 40] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    units[PRIVATE 34] IMPLICIT UInt32
+}
+Pio-UsagePeriod ::= [PRIVATE 41] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    seconds[PRIVATE 34] IMPLICIT UInt32,
+    startTime[PRIVATE 180] IMPLICIT Seconds-Since-2000 OPTIONAL
+}
+Pio-ActivationTime ::= [PRIVATE 42] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    time[PRIVATE 180] IMPLICIT Seconds-Since-2000
+}
+Pio-ExpirationTime ::= [PRIVATE 43] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    time[PRIVATE 180] IMPLICIT Seconds-Since-2000
+}
+Pio-ProtectedData ::= [PRIVATE 44] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    data[PRIVATE 50] IMPLICIT Byte-Array256
+}
+Pio-MaintenancePeriod ::= [PRIVATE 47] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    start[PRIVATE 34] IMPLICIT UInt32,
+    end[PRIVATE 34] IMPLICIT UInt32
+}
+Pio-LicenseQuantity ::= [PRIVATE 55] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    version[PRIVATE 31] IMPLICIT UInt8 OPTIONAL,
+    license-quantity[PRIVATE 34] IMPLICIT UInt32,
+    flags[PRIVATE 56] IMPLICIT LicenseQuantity-Flags,
+    license-tag[PRIVATE 124] IMPLICIT UInt32
+}
+LicenseQuantity-Flags ::= [PRIVATE 56] IMPLICIT SEQUENCE 
+{
+    hidden-denied-userlimit[PRIVATE 212] IMPLICIT BOOLEAN,
+    hidden-denied-nouserlimit[PRIVATE 213] IMPLICIT BOOLEAN,
+    hidden-denied-exclusive[PRIVATE 214] IMPLICIT BOOLEAN,
+    hidden-denied-stationshare[PRIVATE 215] IMPLICIT BOOLEAN,
+    hidden-allow-cmwan[PRIVATE 216] IMPLICIT BOOLEAN,
+    hidden-triple-mode-redundancy[PRIVATE 217] IMPLICIT BOOLEAN,
+    hidden-localaccess-only[PRIVATE 218] IMPLICIT BOOLEAN
+}
+Pio-TransferInfo ::= [PRIVATE 54] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    short-serial-number[PRIVATE 159] IMPLICIT Serial-Number,
+    transfer-id[PRIVATE 197] IMPLICIT Product-Item-ID
+}
+Serial-Number ::= [PRIVATE 159] IMPLICIT SEQUENCE 
+{
+    mask[PRIVATE 142] IMPLICIT Mask,
+    serial[PRIVATE 143] IMPLICIT Serial
+}
+Mask ::= [PRIVATE 142] IMPLICIT INTEGER 
+Serial ::= [PRIVATE 143] IMPLICIT INTEGER 
+Product-Item-ID ::= [PRIVATE 64] IMPLICIT OCTET STRING 
+Pio-BorrowExpirationTime ::= [PRIVATE 57] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    borrow-expiration-secs-since-2000[PRIVATE 34] IMPLICIT UInt32
+}
+Pio-Private-Ltk ::= [PRIVATE 68] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    key[PRIVATE 72] IMPLICIT Private-Key
+}
+Pio-Status ::= [PRIVATE 70] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    status[PRIVATE 59] IMPLICIT Status-Types
+}
+Status-Types ::= [PRIVATE 59] IMPLICIT INTEGER 
+PI-Secret-Data-List ::= [PRIVATE 82] IMPLICIT SEQUENCE OF [PRIVATE 46] EXPLICIT Pio-SecretData
+Pio-SecretData ::= [PRIVATE 46] IMPLICIT ANY 
+PI-Hidden-Data-List ::= [PRIVATE 83] IMPLICIT SEQUENCE OF [PRIVATE 49] EXPLICIT Pio-HiddenData
+Pio-HiddenData ::= [PRIVATE 49] IMPLICIT SEQUENCE 
+{
+    type[PRIVATE 51] IMPLICIT Extended-Type,
+    hdac[PRIVATE 34] IMPLICIT UInt32,
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    data[PRIVATE 50] IMPLICIT Byte-Array256
+}
+Extended-Type ::= [PRIVATE 51] IMPLICIT INTEGER 
+ExtendedProtectedDatas ::= [PRIVATE 91] IMPLICIT SEQUENCE OF [PRIVATE 45] EXPLICIT Pio-ExtendedProtectedData
+Pio-ExtendedProtectedData ::= [PRIVATE 45] IMPLICIT ANY 
+Pio-Delay ::= [PRIVATE 162] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    tics-per-crypt[PRIVATE 32] IMPLICIT UInt16
+}
+Pio-Password ::= [PRIVATE 163] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    password-hash[PRIVATE 141] IMPLICIT HashSHA256
+}
+HashSHA256 ::= [PRIVATE 141] IMPLICIT OCTET STRING 
+HistoryPios ::= [PRIVATE 76] IMPLICIT SEQUENCE OF [PRIVATE 52] EXPLICIT Pio-History
+Pio-History ::= [PRIVATE 52] IMPLICIT SEQUENCE 
+{
+    dependencies[PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    extended-type[PRIVATE 145] IMPLICIT Transfer-Type-Flag,
+    index[PRIVATE 32] IMPLICIT UInt16,
+    hardware-id[PRIVATE 77] IMPLICIT Hardware-ID,
+    transfer-id[PRIVATE 197] IMPLICIT Product-Item-ID,
+    confirmed-transfer-id[PRIVATE 203] IMPLICIT Product-Item-ID,
+    receiver-lt-update-counter[PRIVATE 189] IMPLICIT UInt32,
+    status[PRIVATE 53] IMPLICIT History-Status,
+    timestamp-secs-since-2000[PRIVATE 180] IMPLICIT Seconds-Since-2000,
+    quantity-change[PRIVATE 204] IMPLICIT Quantity-Change OPTIONAL,
+    borrow-expiration-secs-since-2000[PRIVATE 211] IMPLICIT UInt32 OPTIONAL
+}
+Transfer-Type-Flag ::= CHOICE 
+{
+    move-complete[PRIVATE 151] IMPLICIT NULL,
+    move-units[PRIVATE 152] IMPLICIT NULL,
+    move-licenses[PRIVATE 153] IMPLICIT NULL,
+    borrow-local-license[PRIVATE 154] IMPLICIT NULL,
+    borrow-complete[PRIVATE 147] IMPLICIT NULL,
+    none[PRIVATE 166] IMPLICIT NULL
+}
+Hardware-ID ::= CHOICE 
+{
+    cmact-machine-id[PRIVATE 126] IMPLICIT CmActSerial-ID,
+    dongle-serial-number[PRIVATE 167] IMPLICIT Serial-Number
+}
+History-Status ::= [PRIVATE 53] IMPLICIT INTEGER 
+Quantity-Change ::= [PRIVATE 204] IMPLICIT SEQUENCE 
+{
+    quantity-value[PRIVATE 34] IMPLICIT UInt32,
+    returned-quantity[PRIVATE 206] IMPLICIT UInt32
+}
+Dynamic-Pios-List ::= [PRIVATE 74] IMPLICIT SEQUENCE OF [PRIVATE 75] EXPLICIT Dynamic-Pios
+
+
+END

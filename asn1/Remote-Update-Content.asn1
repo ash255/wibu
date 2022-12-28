@@ -1,0 +1,24 @@
+REMOTE-UPDATE-CONTENT DEFINITIONS ::= BEGIN
+
+Remote-Update-Content ::= [PRIVATE 164] IMPLICIT SEQUENCE
+{
+    sw-specs[PRIVATE 161] IMPLICIT Software-Specs,
+    content-id[PRIVATE 6] IMPLICIT OBJECT IDENTIFIER,
+    content-val[PRIVATE 115] EXPLICIT ANY
+}
+Software-Specs ::= [PRIVATE 161] IMPLICIT SEQUENCE 
+{
+    creator-name[PRIVATE 181] IMPLICIT UTF8String,
+    creator-version[PRIVATE 165] IMPLICIT Format-Version,
+    required-version[PRIVATE 122] IMPLICIT Format-Version
+}
+Format-Version ::= [PRIVATE 122] IMPLICIT SEQUENCE 
+{
+    sfl[PRIVATE 78] IMPLICIT UInt8,
+    sfh[PRIVATE 84] IMPLICIT UInt8,
+    feature-flags[PRIVATE 32] IMPLICIT UInt32
+}
+UInt8 ::= [PRIVATE 31] IMPLICIT INTEGER
+UInt32 ::= [PRIVATE 34] IMPLICIT INTEGER
+
+END

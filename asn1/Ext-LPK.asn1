@@ -1,0 +1,16 @@
+EXT-LPK DEFINITIONS ::= BEGIN
+
+
+Ext-LPK ::= [PRIVATE 118] IMPLICIT SEQUENCE
+{
+    firm-code[PRIVATE 114] IMPLICIT INTEGER,
+    target-container-types[PRIVATE 120] IMPLICIT Target-Container-Types
+}
+Target-Container-Types ::= [PRIVATE 120] IMPLICIT SEQUENCE 
+{
+    cmact[PRIVATE 221] IMPLICIT BOOLEAN,
+    cmdongle[PRIVATE 222] IMPLICIT BOOLEAN,
+    cmcloud[PRIVATE 223] IMPLICIT BOOLEAN
+}
+
+END
