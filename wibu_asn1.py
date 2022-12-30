@@ -36,6 +36,7 @@ def certs_chain_add(certs_chain, cert):
     return key
 
 def certs_chain_check(certs_chain):
+    return True
     for key, value in certs_chain.items():
         o = common.asn1_value(value,["tbsCertificate","issuer","rdnSequence","0","0","value"])
         CN = common.asn1_value(value,["tbsCertificate","issuer","rdnSequence","1","0","value"])
@@ -86,7 +87,7 @@ def check_wibu_file_content_valid(asn_wibu_f_res):
             qx = int.from_bytes(pub_key[1:29], "big")
             qy = int.from_bytes(pub_key[29:57], "big")
             
-            print("Q:{x:0x%X, y:0x%X} r=0x%X s=0x%X" % (qx, qy, r, s))
+            # print("Q:{x:0x%X, y:0x%X} r=0x%X s=0x%X" % (qx, qy, r, s))
             if(sha256ecdsa.sha256ecdsa(h, r, s, {"x":qx, "y":qy}, r)):
                 content_check = True
     
@@ -230,14 +231,30 @@ def asn1_init(asn1_dir, root_der):
             if(name.endswith("asn1")):
                 asn1_files.append("%s/%s" % (root, name))
     
-    asn1_def = asn1tools.compile_files(asn1_files, "der")
+    asn1_def = asn1tools.compile_files(asn1_files, "ber")
     certs_chain_add(certs_chain, common.read_file(root_der, "rb"))
 
-def test(file):
+def check_CmAct_key(d):
+    for key, value in certs_chain.items():
+        if(key.find("CmActKey") != -1):
+            pub_key = common.asn1_value(value,["tbsCertificate","subjectPublicKeyInfo","subjectPublicKey"])[0]
+            
+            qx = int.from_bytes(pub_key[1:29], "big")
+            qy = int.from_bytes(pub_key[29:57], "big")
+            
+            ret = sha256ecdsa.check_QdG(d, {"x":qx, "y":qy})
+            if(ret):
+                print("CmAct key check ok")
+            else:
+                print("CmAct key check failed")
+            return ret
+    return False
+    
+def dyn_proc(file, d):
     data = common.read_file(file, "rb")
     
     asn_envelope_res = asn1_def.decode("Wibu-File",  data, True)        
-    # common.print_asn1_data(asn_envelope_res)
+    common.print_asn1_data(asn_envelope_res)
     
     encrypt_key = common.asn1_value(asn_envelope_res, ["envelope","content","recipientInfos","0","encryptedKey"])
     # common.print_asn1_data(encrypt_key)
@@ -245,7 +262,6 @@ def test(file):
     encrypt_data = common.asn1_value(asn_envelope_res, ["envelope","content","encryptedContentInfo","encryptedContent"])
     # print(encrypt_data.hex())
     
-    d = 0x4065b8b4fa7af639bef49232e1202f62890d090249a04737c3fbb854
     aes_key = int.from_bytes(encrypt_key[0:16], "big")
     tmp_Q = {"x": int.from_bytes(encrypt_key[16:44], "big"), "y": int.from_bytes(encrypt_key[48:76], "big")}
     # print("%X %X" % (tmp_Q["x"], tmp_Q["y"]))
@@ -270,17 +286,21 @@ def test(file):
     # print("decrypt len:%d data=%s" % (len(decrypt_data), decrypt_data.hex()))
     
     asn_fi_dyn_res = asn1_def.decode("DynData-Content", decrypt_data, True)
-    common.print_asn1_data(asn_fi_dyn_res)
+    # common.print_asn1_data(asn_fi_dyn_res)
     # common.write_file("fi_dyn.dat", decrypt_data, "wb")
 
 def main():
     asn1_init("asn1/", "testcase/root.der")
     # lif_proc("testcase/dji_aeroscope_pro.WibuCmLIF")
-    lif_proc("testcase/Terra2314.WibuCmLIF")
+    # lif_proc("testcase/Terra2314.WibuCmLIF")
     # rac_proc("testcase/context-130-836852436.WibuCmRaC")
+    # rac_proc("testcase/update-130-1021612743.WibuCmRaC")
+    # check_CmAct_key(0xd9352ca798fde876a6c093e60bb39870ddb10e722276ab78eea3cc40)
     # rau_proc("testcase/32b9e930-fc3a-419e-9bd1-59cf6ec375f8_556_1659322984.WibuCmRaU")
     
-    # test("testcase/CmAct/6000316_8200e6ce5636541cb1f68f530b883a916de609b0.WibuCmActDyn")
+    # dyn_proc("testcase/CmAct/6000316_8200e6ce5636541cb1f68f530b883a916de609b0.WibuCmActDyn", 0x4065b8b4fa7af639bef49232e1202f62890d090249a04737c3fbb854)
+    dyn_proc("testcase/CmAct/6000316_82004bd37fef2aeaf4b7964b85e65d3d6e9011b6.WibuCmActDyn", 0xd9352ca798fde876a6c093e60bb39870ddb10e722276ab78eea3cc40)
+    
     # data = common.read_file("testcase/CmAct/6000316_8200e6ce5636541cb1f68f530b883a916de609b0.WibuCmActLic", "rb")
     # res = parser_wibu_file(data)
     # common.print_asn1_data(res)

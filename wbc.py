@@ -238,7 +238,7 @@ class wbc_file:
         k = h.final()
         # print("k: %s" % k.hex())
         
-        return k
+        return k[0:28]
 
     def combine_feature(self, code, features, code_list):
         h = SHA256()
@@ -380,9 +380,9 @@ class wbc_file:
             for root,dirs,files in os.walk(path):
                 for d in dirs:
                     if(root == path and d.startswith("BAT")):
-                        manufacturer = common.read_file("%s/%s/%s" % (root, d, "manufacturer")).strip()
-                        model_name = common.read_file("%s/%s/%s" % (root, d, "model_name")).strip()
-                        serial_number = common.read_file("%s/%s/%s" % (root, d, "serial_number")).strip()
+                        manufacturer = common.read_file("%s/%s/%s" % (root, d, "manufacturer"))
+                        model_name = common.read_file("%s/%s/%s" % (root, d, "model_name"))
+                        serial_number = common.read_file("%s/%s/%s" % (root, d, "serial_number"))
                         if(manufacturer != None and model_name != None and serial_number != None):
                             return "%s|%s|%s" % (manufacturer, model_name, serial_number)
             return None
@@ -402,28 +402,31 @@ class wbc_file:
             for root,dirs,files in os.walk(path):
                 for d in dirs:
                     if(root == path and d.startswith("usb") == False):
-                        idVendor = common.read_file("%s/%s/%s" % (root, d, "idVendor")).strip()
-                        idProduct = common.read_file("%s/%s/%s" % (root, d, "idProduct")).strip()
-                        manufacturer = common.read_file("%s/%s/%s" % (root, d, "manufacturer")).strip()
-                        product = common.read_file("%s/%s/%s" % (root, d, "product")).strip()
-                        serial = common.read_file("%s/%s/%s" % (root, d, "serial")).strip()
-                        removable = common.read_file("%s/%s/%s" % (root, d, "removable")).strip()
+                        idVendor = common.read_file("%s/%s/%s" % (root, d, "idVendor"))
+                        idProduct = common.read_file("%s/%s/%s" % (root, d, "idProduct"))
+                        manufacturer = common.read_file("%s/%s/%s" % (root, d, "manufacturer"))
+                        product = common.read_file("%s/%s/%s" % (root, d, "product"))
+                        serial = common.read_file("%s/%s/%s" % (root, d, "serial"))
+                        removable = common.read_file("%s/%s/%s" % (root, d, "removable"))
                         
-                        ret = "%s%s%s" % (idVendor, idProduct, serial)
-                        if(removable == "fixed"):
-                            return ret
+                        if(idVendor != None and idProduct != None and manufacturer != None and \
+                           product != None and serial != None and removable != None):
                         
-                        product_low = product.lower()
-                        if(product_low.find("integrated") != -1 or
-                           product_low.find("internal") != -1 or
-                           product_low.find("built-in") != -1 or
-                           product.find("Card Reader") != -1 or
-                           product.find("Bluetooth") != -1 or
-                           product.find("IR Receiver") != -1):
-                            return ret
-                        
-                        if(manufacturer.find("Apple") != -1):
-                            return ret
+                            ret = "%s%s%s" % (idVendor, idProduct, serial)
+                            if(removable == "fixed"):
+                                return ret
+                            
+                            product_low = product.lower()
+                            if(product_low.find("integrated") != -1 or
+                               product_low.find("internal") != -1 or
+                               product_low.find("built-in") != -1 or
+                               product.find("Card Reader") != -1 or
+                               product.find("Bluetooth") != -1 or
+                               product.find("IR Receiver") != -1):
+                                return ret
+                            
+                            if(manufacturer.find("Apple") != -1):
+                                return ret
                         
             return None
         elif(code == 8005):
