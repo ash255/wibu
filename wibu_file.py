@@ -66,9 +66,9 @@ class wibu_file:
     def get_asn1_data(self):
         return self.asn1_data
     
-    def set_asn1_data(self):
-        self.asn1_data = self
-        for k,v in f.get_asn1_data().items():
+    def set_asn1_data(self, data):
+        self.asn1_data = data
+        for k,v in self.get_asn1_data().items():
             self.info["Info"][k+"Size"] = len(v)
     
     def save(self, file=None):

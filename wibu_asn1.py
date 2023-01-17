@@ -32,11 +32,10 @@ def certs_chain_add(certs_chain, cert):
         elif(CN == "LTK"):
             asn_ext_ltk = common.asn1_value(asn_cert_res,["tbsCertificate","extensions","2","extnValue"])
             asn_ext_ltk_res = asn1_def.decode("Ext-LTK", asn_ext_ltk, True)
-            common.print_asn1_data(asn_ext_ltk_res)
+            # common.print_asn1_data(asn_ext_ltk_res)
     return key
 
 def certs_chain_check(certs_chain):
-    return True
     for key, value in certs_chain.items():
         o = common.asn1_value(value,["tbsCertificate","issuer","rdnSequence","0","0","value"])
         CN = common.asn1_value(value,["tbsCertificate","issuer","rdnSequence","1","0","value"])
@@ -96,7 +95,7 @@ def check_wibu_file_content_valid(asn_wibu_f_res):
     if(content_check == False):
         raise(Exception("Check content failed")) 
   
-def parser_wibu_file_content(asn_wibu_f_res):
+def wibu_file_sign_proc_content(asn_wibu_f_res):
     content_type = common.asn1_value(asn_wibu_f_res, ["signed","content","contentInfo","contentType"])
     asn_type = ""
     if(content_type == "1.3.6.1.4.1.44485.2.1"):
@@ -151,25 +150,25 @@ def parser_wibu_file_content(asn_wibu_f_res):
         
     return asn_content_res
 
-def parser_wibu_file(wibu_file_data):
+def wibu_file_sign_proc(wibu_file_data):
     asn_wibu_f_res = asn1_def.decode("Wibu-File", wibu_file_data, True)
     # common.print_asn1_data(asn_wibu_f_res)
     check_wibu_file_content_valid(asn_wibu_f_res)
     
-    return parser_wibu_file_content(asn_wibu_f_res)
+    return wibu_file_sign_proc_content(asn_wibu_f_res)
 
 def lif_proc(lif_file):
     f = wibu_file.wibu_file(lif_file)
     asn1_data = f.get_asn1_data()
     
-    asn_lif_res = parser_wibu_file(asn1_data["LicenseInformation"])
-    common.print_asn1_data(asn_lif_res)
+    asn_lif_res = wibu_file_sign_proc(asn1_data["LicenseInformation"])
+    # common.print_asn1_data(asn_lif_res)
     
 def rac_proc(rac_file):
     f = wibu_file.wibu_file(rac_file)
     asn1_data = f.get_asn1_data()
     
-    asn_rac_res = parser_wibu_file(asn1_data["Context"])
+    asn_rac_res = wibu_file_sign_proc(asn1_data["Context"])
     # common.print_asn1_data(asn_rac_res)
     
     if(common.asn1_value(asn_rac_res, ["content-id"]) == "1.3.6.1.4.1.44485.2.2.3"):
@@ -179,35 +178,128 @@ def rac_proc(rac_file):
     
         ### same as LicenseInformation
         lif = common.asn1_value(asn_prog_res, ["container-type-specific","cmact","lif"])
-        asn_lif_res = parser_wibu_file(lif)
+        asn_lif_res = wibu_file_sign_proc(lif)
         # common.print_asn1_data(asn_lif_res)
+
+def wibu_file_envelope_proc(envelope_data, d, asn_envelope_res=None):
+    if(asn_envelope_res == None):
+        asn_envelope_res = asn1_def.decode("Wibu-File",  envelope_data, True)        
+    # common.print_asn1_data(asn_envelope_res)
     
-def update_proc(asn1_data):
-    asn_ruc_res = parser_wibu_file(asn1_data) 
+    encrypt_key = common.asn1_value(asn_envelope_res, ["envelope","content","recipientInfos","0","encryptedKey"])
+    # common.print_asn1_data(encrypt_key)
+    
+    encrypt_data = common.asn1_value(asn_envelope_res, ["envelope","content","encryptedContentInfo","encryptedContent"])
+    encrypt_data_type = common.asn1_value(asn_envelope_res, ["envelope","content","encryptedContentInfo","contentType"])
+    
+    aes_key = int.from_bytes(encrypt_key[0:16], "big")
+    tmp_Q = {"x": int.from_bytes(encrypt_key[16:44], "big"), "y": int.from_bytes(encrypt_key[48:76], "big")}
+    # print("%X %X" % (tmp_Q["x"], tmp_Q["y"]))
+    
+    res = sha256ecdsa.pmul(d, tmp_Q, sha256ecdsa.curve_p)
+    # print(res)
+
+    sha = hashlib.sha256()
+    sha.update(b"\x04")
+    sha.update(encrypt_key[16:44] + encrypt_key[48:76])
+    sha.update(res["x"].to_bytes(28, "big"))
+    sha.update(b"\x00\x00\x00\x01")
+    xor_strem = sha.digest()
+    
+    aes_key ^= int.from_bytes(xor_strem[0:16], "big")
+    # print("aes_key: %X" % aes_key)
+    aes_key_bytes = aes_key.to_bytes(16, "big")
+
+    aes128 = AES.new(aes_key_bytes, AES.MODE_CBC, b"\x00"*16)
+    decrypt_data = aes128.decrypt(encrypt_data)
+    # print("encrypt len:%d data=%s" % (len(encrypt_data), encrypt_data.hex()))
+    # print("decrypt len:%d data=%s" % (len(decrypt_data), decrypt_data.hex()))
+    
+    return decrypt_data, encrypt_data_type
+  
+def update_proc(asn1_data, d):
+    asn_ruc_res = wibu_file_sign_proc(asn1_data) 
     # common.print_asn1_data(asn_ruc_res)
     
-    if(common.asn1_value(asn_ruc_res, ["content-id"]) == "1.3.6.1.4.1.44485.2.3.4"):
+    content_id = common.asn1_value(asn_ruc_res, ["content-id"])
+    if(content_id == "1.3.6.1.4.1.44485.2.3.4"):
         prog_update = common.asn1_value(asn_ruc_res, ["content-val"])
         asn_prog_res = asn1_def.decode("Prog-Update",  prog_update, True)   
         # common.print_asn1_data(asn_prog_res)
         
-        fi_p = common.asn1_value(asn_prog_res, ["fi", "fi-p"])
-        asn_fi_p_content_res = parser_wibu_file(fi_p) 
-        # common.print_asn1_data(asn_fi_p_content_res) 
-        hashing_salt = common.asn1_value(asn_fi_p_content_res, ["hashing-salt"])
-        fi_dynamic_hash = common.asn1_value(asn_fi_p_content_res, ["fi-dynamic-hash"])
-        
-        fi_d = common.asn1_value(asn_prog_res, ["fi", "fi-dynamic"])
-        asn_fi_d_res = asn1_def.decode("Wibu-File",  fi_d, True)   
-        # common.print_asn1_data(asn_fi_d_res)
-        
-        ### from sub_781ED0
-        h1 = hashlib.sha256(hashing_salt + fi_d).digest()
-        h2 = hashlib.sha256(hashing_salt + h1).digest()
-        # h2 = hashlib.sha256(hashing_salt + b'\x01' + h1).digest()
-        print(h2.hex())
+        if(common.asn1_value(asn_prog_res, ["fi"]) != None):
+            fi_p = common.asn1_value(asn_prog_res, ["fi", "fi-p"])
+            asn_fi_p_content_res = wibu_file_sign_proc(fi_p) 
+            # print("<!-- fi-p -->")
+            # common.print_asn1_data(asn_fi_p_content_res) 
+            
+            hashing_salt = common.asn1_value(asn_fi_p_content_res, ["hashing-salt"])
+            fi_dynamic_hash = common.asn1_value(asn_fi_p_content_res, ["fi-dynamic-hash"])
+            
+            fi_dynamic = common.asn1_value(asn_prog_res, ["fi", "fi-dynamic"]) 
+            decrypt_data, decrypt_data_type = wibu_file_envelope_proc(fi_dynamic, d)
+            decrypt_data = decrypt_data.rstrip(b"\x00")
+            decrypt_data = decrypt_data[0:-1]
+            print(decrypt_data.hex())
+            
+            if(decrypt_data_type == "1.3.6.1.4.1.44485.2.7"):
+                asn_fi_dyn_res = asn1_def.decode("Content-FI-Dynamic", decrypt_data, True)
+                # print("<!-- fi-dynamic -->")
+                # common.print_asn1_data(asn_fi_dyn_res)
+            else:
+                raise(Exception("unknown decrypt data type %s" % decrypt_data_type))
+                
+            # check fi-dynamic is Unmodified
+            # from sub_781ED0 sub_77BF00 sub_781890
+            h1 = hashlib.sha256(hashing_salt + decrypt_data).digest()
+            for i in range(0,0xFFFF):
+                h2 = hashlib.sha256(hashing_salt + struct.pack(">H", i) + h1).digest()
+                if(h2[0:16] == fi_dynamic_hash):
+                    print("i=%d" % i)
+                
+            # h2 = hashlib.sha256(hashing_salt + b"\x01" + h1).digest()
+            # print(hashing_salt.hex())
+            # print(h2.hex())
+            # print(fi_dynamic_hash.hex())
+        elif(common.asn1_value(asn_prog_res, ["pi"]) != None):
+            pi_list = common.asn1_value(asn_prog_res, ["pi"])
+            for pi in pi_list:
+                # common.print_asn1_data(pi)
+                pi_p = common.asn1_value(pi, ["pi-p"])
+                pi_dynamic = common.asn1_value(pi, ["pi-dynamic"])
+                
+                asn_pi_p_content_res = wibu_file_sign_proc(pi_p)
+                # print("<!-- pi-p -->")
+                # common.print_asn1_data(asn_pi_p_content_res)
+                h1 = hashlib.sha256(pi_dynamic).digest()
+                print("pi-p h1: %s" % h1.hex())
+                
+                decrypt_data, decrypt_data_type = wibu_file_envelope_proc(pi_dynamic, d)
+                # common.write_file("pi-p.dat", decrypt_data, "wb")
+                if(decrypt_data_type == "1.3.6.1.4.1.44485.2.11"):
+                    asn_pi_dyn_res = asn1_def.decode("Content-PI-Dynamic", decrypt_data, True)
+                    # print("<!-- pi-dynamic -->")
+                    # common.print_asn1_data(asn_pi_dyn_res)
+                else:
+                    raise(Exception("unknown decrypt data type %s" % decrypt_data_type))
+     
+                hashing_salt = common.asn1_value(asn_pi_p_content_res, ["hashing-salt"])
+                pi_dynamic_hash = common.asn1_value(asn_pi_p_content_res, ["pi-dynamic-hash"])
+                # h1 = hashlib.sha256(hashing_salt + decrypt_data).digest()
+                # h1 = hashlib.sha256(hashing_salt + pi_dynamic).digest()
+                # h2 = hashlib.sha256(hashing_salt + h1).digest()
+                # h2 = hashlib.sha256(hashing_salt + struct.pack(">H", i) + h1).digest()
+ 
+                # h2 = hashlib.sha256(hashing_salt + b"\x01" + h1).digest()
+                # print(h2.hex())
+                # print(pi_dynamic_hash.hex())
+        else:
+            common.print_asn1_data(asn_prog_res)
+            raise(Exception("cant parser Prog-Update"))
+    else:
+        raise(Exception("unknown content type %s" % content_id))
     
-def rau_proc(rau_file):
+def rau_proc(rau_file, d):
     f = wibu_file.wibu_file(rau_file)
     asn1_data = f.get_asn1_data()
     
@@ -215,14 +307,13 @@ def rau_proc(rau_file):
         # common.write_file("%s.dat" % key, value, "wb")
     
         if(key.startswith("LicenseInformation")):
-            parser_wibu_file(asn1_data)
+            wibu_file_sign_proc(value)
         elif(key.startswith("Update")):
-            update_proc(value)
-            break
+            update_proc(value, d)
         else:
-            raise(Exception("unknown data type\n"))
+            raise(Exception("unknown data type %s" % key))
             
-def asn1_init(asn1_dir, root_der):
+def asn1_init(asn1_dir, root_der=None):
     global asn1_def, certs_chain
     
     asn1_files = []
@@ -231,8 +322,9 @@ def asn1_init(asn1_dir, root_der):
             if(name.endswith("asn1")):
                 asn1_files.append("%s/%s" % (root, name))
     
-    asn1_def = asn1tools.compile_files(asn1_files, "ber")
-    certs_chain_add(certs_chain, common.read_file(root_der, "rb"))
+    asn1_def = asn1tools.compile_files(asn1_files, "der")
+    if(root_der != None):
+        certs_chain_add(certs_chain, common.read_file(root_der, "rb"))
 
 def check_CmAct_key(d):
     for key, value in certs_chain.items():
@@ -252,61 +344,53 @@ def check_CmAct_key(d):
     
 def dyn_proc(file, d):
     data = common.read_file(file, "rb")
-    
-    asn_envelope_res = asn1_def.decode("Wibu-File",  data, True)        
-    common.print_asn1_data(asn_envelope_res)
-    
-    encrypt_key = common.asn1_value(asn_envelope_res, ["envelope","content","recipientInfos","0","encryptedKey"])
-    # common.print_asn1_data(encrypt_key)
-    
-    encrypt_data = common.asn1_value(asn_envelope_res, ["envelope","content","encryptedContentInfo","encryptedContent"])
-    # print(encrypt_data.hex())
-    
-    aes_key = int.from_bytes(encrypt_key[0:16], "big")
-    tmp_Q = {"x": int.from_bytes(encrypt_key[16:44], "big"), "y": int.from_bytes(encrypt_key[48:76], "big")}
-    # print("%X %X" % (tmp_Q["x"], tmp_Q["y"]))
-    
-    res = sha256ecdsa.pmul(d, tmp_Q, sha256ecdsa.curve_p)
-    # print(res)
-    
-    sha = hashlib.sha256()
-    sha.update(b'\x04')
-    sha.update(encrypt_key[16:44] + encrypt_key[48:76])
-    sha.update(bytes.fromhex("%X" % res["x"]))
-    sha.update(b'\x00\x00\x00\x01')
-    xor_strem = sha.digest()
-    
-    aes_key ^= int.from_bytes(xor_strem[0:16], "big")
-    # print(aes_key)
-    aes_key_bytes = bytes.fromhex("%X" % aes_key)
+    decrypt_data, decrypt_data_type = wibu_file_envelope_proc(data, d)
 
-    aes128 = AES.new(aes_key_bytes, AES.MODE_CBC, b"\x00"*16)
-    decrypt_data = aes128.decrypt(encrypt_data)
-    # print("encrypt len:%d data=%s" % (len(encrypt_data), encrypt_data.hex()))
-    # print("decrypt len:%d data=%s" % (len(decrypt_data), decrypt_data.hex()))
+    if(decrypt_data_type == "1.3.6.1.4.1.44485.2.6"):
+        decrypt_data = decrypt_data.rstrip(b"\x00")
+
+        asn1_raw_data = decrypt_data[0:-33]
+        sha_val = decrypt_data[-33:-1]
+        print("%X:%s" % (len(asn1_raw_data), asn1_raw_data.hex()))
+        print("%X:%s" % (len(sha_val), sha_val.hex()))
     
-    asn_fi_dyn_res = asn1_def.decode("DynData-Content", decrypt_data, True)
-    # common.print_asn1_data(asn_fi_dyn_res)
-    # common.write_file("fi_dyn.dat", decrypt_data, "wb")
+        asn_dyn_res = asn1_def.decode("DynData-Content", asn1_raw_data, True)
+        # common.print_asn1_data(asn_dyn_res)
+        # common.write_file("fi_dyn.dat", decrypt_data, "wb")
+        
+        salt = bytes.fromhex("1F1670679E24FB107705D4C89CD73C9C")    #check where it from
+        
+        h1 = hashlib.sha256(asn1_raw_data).digest()
+        h2 = hashlib.sha256(salt+h1).digest()
+        print(h1.hex())
+        print(h2.hex())
+        # print(sha_val.hex())
+    else:
+        raise(Exception("unknown decrypt data type %s" % decrypt_data_type))
 
 def main():
     asn1_init("asn1/", "testcase/root.der")
-    # lif_proc("testcase/dji_aeroscope_pro.WibuCmLIF")
+    
+    lif_proc("testcase/dji_aeroscope_pro.WibuCmLIF")
     # lif_proc("testcase/Terra2314.WibuCmLIF")
-    # rac_proc("testcase/context-130-836852436.WibuCmRaC")
+    # rac_proc("testcase/context-130-2326785491.WibuCmRaC")
     # rac_proc("testcase/update-130-1021612743.WibuCmRaC")
     # check_CmAct_key(0xd9352ca798fde876a6c093e60bb39870ddb10e722276ab78eea3cc40)
-    # rau_proc("testcase/32b9e930-fc3a-419e-9bd1-59cf6ec375f8_556_1659322984.WibuCmRaU")
+    # rau_proc("testcase/32b9e930-fc3a-419e-9bd1-59cf6ec375f8_556_1659322984.WibuCmRaU", 0x0)
     
     # dyn_proc("testcase/CmAct/6000316_8200e6ce5636541cb1f68f530b883a916de609b0.WibuCmActDyn", 0x4065b8b4fa7af639bef49232e1202f62890d090249a04737c3fbb854)
-    dyn_proc("testcase/CmAct/6000316_82004bd37fef2aeaf4b7964b85e65d3d6e9011b6.WibuCmActDyn", 0xd9352ca798fde876a6c093e60bb39870ddb10e722276ab78eea3cc40)
+    # dyn_proc("testcase/CmAct/6000316_82004bd37fef2aeaf4b7964b85e65d3d6e9011b6.WibuCmActDyn", 0xd9352ca798fde876a6c093e60bb39870ddb10e722276ab78eea3cc40)
+    # dyn_proc("testcase/new/4/CmAct/6000107_8200f5a6520fcf8bc74e6f45f88883264bf1361e.WibuCmActDyn", 0xaa3887d8d0d468bbbc79afc0e89921f0f9be8f25b86aed15480e9e56)
+    # dyn_proc("testcase/update/CmAct/6000316_8200c900fc2e46151f3647f20204e79ea3e302f7.WibuCmActDyn", 0xf4e3892b60dfdf1e88b21f1848e8ccbef32bd3abe53763c8a3321955)
+    # rau_proc("testcase/new/3/context-130-4191928771.WibuCmRaU", 0xaa3887d8d0d468bbbc79afc0e89921f0f9be8f25b86aed15480e9e56)
+    rau_proc("testcase/new/4/context-130-4191928771-2.WibuCmRaU", 0xaa3887d8d0d468bbbc79afc0e89921f0f9be8f25b86aed15480e9e56)
     
     # data = common.read_file("testcase/CmAct/6000316_8200e6ce5636541cb1f68f530b883a916de609b0.WibuCmActLic", "rb")
-    # res = parser_wibu_file(data)
+    # res = wibu_file_sign_proc(data)
     # common.print_asn1_data(res)
     # lif = common.asn1_value(res, ["lif"])
-    # lif_res = parser_wibu_file(lif)
+    # lif_res = wibu_file_sign_proc(lif)
     # common.print_asn1_data(lif_res)
     
-if __name__ == '__main__':
+if __name__ == "__main__":
 	main()
