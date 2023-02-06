@@ -9,6 +9,7 @@ import copy
 import sha256ecdsa
 import hashlib
 import SHA256
+import struct
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from tkinter import *
@@ -334,21 +335,77 @@ class asn1_reader(tkinter.Tk):
             self.reset()
             self.load_file(file_path)
     
-    def fix_pi(self, salt):
+    def fix_pi_fi(self, salt):
+        pi_map = {
+            "pi-featuremap": 0x25, 
+            "pi-text": 0x26,
+            "pi-userdata": 0x27,
+            "pi-unitcounter": 0x28,
+            "pi-usageperiod": 0x29,
+            "pi-activationtime": 0x2A,
+            "pi-expirationtime": 0x2B,
+            "pi-protdata": 0x2C,
+            "pi-maintenanceperiod": 0x2F,
+            "pi-licensequantity": 0x37,
+            "pi-status": 0x46}
+
         sha1 = SHA256.SHA256(salt)
         sha2 = SHA256.SHA256(salt)
         
         pisk = common.asn1_value(self.cur_asn1_data, ["pi-dynamic","pi-pisk"])
         sha1.update(pisk)
         h1 = sha1.final()
-        sha2.update(b"\x35" + h1)
+        sha2.update(b"\x23" + h1)
         
-        #工作到sub_781890
-        #接下来会对多个元素的dependencies进行判决
-        #接下来会对list元素的dependencies进行判决
-        #接下来会对剩余元素的dependencies进行判决
+        for key, val in pi_map.items():
+            if(common.asn1_value(self.cur_asn1_data, ["pi-dynamic", key]) != None):
+                attr = common.asn1_value(self.cur_asn1_data, ["pi-dynamic", key, "dependencies", "attribute"])
+                if(attr == None or (attr & 4) == 0):
+                    sha2.update(struct.pack("B", val))
+                    # print("%s add sha data 0x%02X" % (key, val))
+          
+        list_pi_secretdata = common.asn1_value(self.cur_asn1_data, ["pi-dynamic", "list-pi-secretdata"])
+        for pi_secretdata in list_pi_secretdata:
+            attr = common.asn1_value(pi_secretdata, ["dependencies", "attribute"])
+            if(attr == None or (attr & 4) == 0):
+                sha2.update(struct.pack("B", val))
+                # print("pi_secretdata[%d] add sha data 0x%02X" % (list_pi_secretdata.index(pi_secretdata), 0x52))
+            
+        list_pi_hiddendata = common.asn1_value(self.cur_asn1_data, ["pi-dynamic", "list-pi-hiddendata"])
+        for pi_hiddendata in list_pi_hiddendata:
+            attr = common.asn1_value(pi_hiddendata, ["dependencies", "attribute"])
+            if(attr == None or (attr & 4) == 0):
+                sha2.update(struct.pack("B", 0x52))
+                # print("list_pi_hiddendata[%d] add sha data 0x%02X" % (list_pi_hiddendata.index(pi_hiddendata), 0x53))
         
+        list_pi_extprotdata = common.asn1_value(self.cur_asn1_data, ["pi-dynamic", "list-pi-extprotdata"])
+        for pi_extprotdata in list_pi_extprotdata:
+            attr = common.asn1_value(pi_extprotdata, ["dependencies", "attribute"])
+            if(attr == None or (attr & 4) == 0):
+                sha2.update(struct.pack("B", val))
+                # print("list_pi_extprotdata[%d] add sha data 0x%02X" % (list_pi_extprotdata.index(pi_extprotdata), 0x5B))
         
+        if(common.asn1_value(self.cur_asn1_data, ["pi-dynamic", "pi-delay"]) != None):
+            attr = common.asn1_value(self.cur_asn1_data, ["pi-dynamic", "pi-delay", "dependencies", "attribute"])
+            if(attr == None or (attr & 4) == 0):
+                sha2.update(struct.pack("B", 0xA2))
+                # print("%s add sha data 0x%02X" % ("pi-delay", 0xA2))
+            
+        if(common.asn1_value(self.cur_asn1_data, ["pi-dynamic", "pi-password"]) != None):
+            attr = common.asn1_value(self.cur_asn1_data, ["pi-dynamic", "pi-password", "dependencies", "attribute"])
+            if(attr == None or (attr & 4) == 0):
+                sha2.update(struct.pack("B", 0xA3))
+                print("%s add sha data 0x%02X" % ("pi-password", 0xA3))
+                if(attr == None or (attr & 1) == 0):
+                    password_hash = common.asn1_value(self.cur_asn1_data, ["pi-dynamic", "pi-password", "password-hash"])
+                    sha1.update(password_hash)
+                    h1 = sha1.final()
+                    sha2.update(h1)
+                    # print("%s add sha data %s" % ("pi-password", h1.hex()))
+
+        # common.asn1_value(self.cur_asn1_data, ["pi-dynamic", "pi-password", "dependencies", "attribute"])
+
+        print(sha2.final().hex())
     
     def fix(self):
         if(self.asn1_type == ""):
@@ -357,6 +414,8 @@ class asn1_reader(tkinter.Tk):
             certs = common.asn1_value(self.cur_asn1_data, ["signed", "content", "certificates"])
             if(certs == None):
                 # fix envelope
+                # 用新密钥来重新加密content
+                # self.aes_encrypt_data()
                 pass
             else:
                 # fix signed cert
@@ -527,10 +586,19 @@ def main():
     # reader = asn1_reader(file="testcase/dji_aeroscope_pro.WibuCmLIF")
     # reader = asn1_reader(file="testcase/context-130-142953036.WibuCmRaC")
     # reader = asn1_reader(file="testcase/32b9e930-fc3a-419e-9bd1-59cf6ec375f8_556_1659322984.WibuCmRaU")
-    reader = asn1_reader(file="testcase/new/4/context-130-4191928771-2.WibuCmRaU")
+    # reader = asn1_reader(file="testcase/new/4/context-130-4191928771-2.WibuCmRaU")
     # reader = asn1_reader(file="testcase/new/3/context-130-4191928771.WibuCmRaU")
     # reader = asn1_reader(file="testcase/new/4/CmAct/6000107_8200f5a6520fcf8bc74e6f45f88883264bf1361e.WibuCmActDyn")
+    reader = asn1_reader(file="testcase/new/4/context-130-4191928771-2.WibuCmRaU")
+    
+    # fd = open("testcase/new/4/content-pi-dynamic.bin","rb")
+    # data = fd.read()
+    # fd.close()
+    # reader = asn1_reader()  #file="testcase/new/4/content-pi-dynamic.bin"
+    # reader.load_data({"default":data}, "Content-PI-Dynamic")
+    # reader.fix_pi_fi(b"\xA4\x45\x4D\xAB")
     # reader = asn1_reader()
+    
     reader.mainloop()
     # new_reader(None, "testcase/32b9e930-fc3a-419e-9bd1-59cf6ec375f8_556_1659322984.WibuCmRaU")
     
