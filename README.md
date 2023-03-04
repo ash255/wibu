@@ -79,3 +79,9 @@ CmActId=AB CD EF 01 23 45 67
 ;Value=0058000000
 ```
 
+# TODO
+
+* asn1_value函数无法处理连续tuple嵌套的结构，如("a", ("b", 456))
+* __decrypt_data方法中去完padding后可能还存在hash_val，可能导致编码和解码不一致
+* get_feature方法中的6001处理，多网卡情况下可能有误。
+* get_private_key方法中0x04000000如何得来。
