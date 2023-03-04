@@ -1,0 +1,4 @@
+asn1tools==-0.164.0
+pycryptodome==3.14.1
+PyQt5==5.15.8
+PyQt5-sip==12.11.1

@@ -1,0 +1,117 @@
+CONTENT-PI-P DEFINITIONS ::= BEGIN
+Content-PI-P ::= [PRIVATE 63] IMPLICIT SEQUENCE 
+{
+    format-version [PRIVATE 122] IMPLICIT Format-Version,
+    firmitem-id-fi-p [PRIVATE 87] IMPLICIT Firmitem-ID,
+    product-item-id [PRIVATE 64] IMPLICIT Product-Item-ID,
+    product-item-id-of-updated-pi-p [PRIVATE 192] IMPLICIT Product-Item-ID OPTIONAL,
+    hashing-salt [PRIVATE 61] IMPLICIT Hashing-Salt,
+    pi-dynamic-hash [PRIVATE 69] IMPLICIT Dynamic-Data-Hash,
+    product-item [PRIVATE 89] IMPLICIT Product-Item,
+    transfer-params [PRIVATE 65] IMPLICIT Transfer-Parameters
+}
+Format-Version ::= [PRIVATE 122] IMPLICIT SEQUENCE 
+{
+    sfl [PRIVATE 78] IMPLICIT UInt8,
+    sfh [PRIVATE 84] IMPLICIT UInt8,
+    feature-flags [PRIVATE 32] IMPLICIT UInt32
+}
+UInt8 ::= [PRIVATE 31] IMPLICIT OCTET STRING 
+UInt32 ::= [PRIVATE 34] IMPLICIT OCTET STRING 
+Firmitem-ID ::= [PRIVATE 87] IMPLICIT OCTET STRING 
+Product-Item-ID ::= [PRIVATE 64] IMPLICIT OCTET STRING 
+Hashing-Salt ::= [PRIVATE 61] IMPLICIT OCTET STRING 
+Dynamic-Data-Hash ::= [PRIVATE 69] IMPLICIT OCTET STRING 
+Product-Item ::= [PRIVATE 89] IMPLICIT SEQUENCE 
+{
+    product-code [PRIVATE 36] IMPLICIT Pio-ProductCode,
+    item-reference [PRIVATE 88] IMPLICIT Pio-ItemReference,
+    pi-featuremap [PRIVATE 37] IMPLICIT Pio-FeatureMap OPTIONAL,
+    pi-activationtime [PRIVATE 42] IMPLICIT Pio-ActivationTime OPTIONAL,
+    pi-expirationtime [PRIVATE 43] IMPLICIT Pio-ExpirationTime OPTIONAL,
+    pi-protdata [PRIVATE 44] IMPLICIT Pio-ProtectedData OPTIONAL,
+    pi-maintenanceperiod [PRIVATE 47] IMPLICIT Pio-MaintenancePeriod OPTIONAL,
+    list-pi-extprotdata [PRIVATE 91] IMPLICIT ExtendedProtectedDatas,
+    pi-moduleitems [PRIVATE 90] IMPLICIT Module-Item-List OPTIONAL
+}
+Pio-ProductCode ::= [PRIVATE 36] IMPLICIT SEQUENCE 
+{
+    dependencies [PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    product-code [PRIVATE 34] IMPLICIT UInt32
+}
+Tvb-Control ::= [PRIVATE 71] IMPLICIT SEQUENCE 
+{
+    data [PRIVATE 1] IMPLICIT BOOLEAN,
+    serial [PRIVATE 1] IMPLICIT BOOLEAN,
+    update-counter [PRIVATE 1] IMPLICIT BOOLEAN,
+    attribute [PRIVATE 205] IMPLICIT Tvb-Attributes OPTIONAL
+}
+Tvb-Attributes ::= [PRIVATE 205] IMPLICIT INTEGER 
+Pio-ItemReference ::= [PRIVATE 88] IMPLICIT SEQUENCE 
+{
+    dependencies [PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    reference [PRIVATE 32] IMPLICIT UInt16
+}
+UInt16 ::= [PRIVATE 32] IMPLICIT OCTET STRING 
+Pio-FeatureMap ::= [PRIVATE 37] IMPLICIT SEQUENCE 
+{
+    dependencies [PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    featuremap [PRIVATE 34] IMPLICIT UInt32
+}
+Pio-ActivationTime ::= [PRIVATE 42] IMPLICIT SEQUENCE 
+{
+    dependencies [PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    time [PRIVATE 180] IMPLICIT Seconds-Since-2000
+}
+Seconds-Since-2000 ::= [PRIVATE 180] IMPLICIT UInt32
+Pio-ExpirationTime ::= [PRIVATE 43] IMPLICIT SEQUENCE 
+{
+    dependencies [PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    time [PRIVATE 180] IMPLICIT Seconds-Since-2000
+}
+Pio-ProtectedData ::= [PRIVATE 44] IMPLICIT SEQUENCE 
+{
+    dependencies [PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    data [PRIVATE 50] IMPLICIT Byte-Array256
+}
+Byte-Array256 ::= [PRIVATE 50] IMPLICIT OCTET STRING 
+Pio-MaintenancePeriod ::= [PRIVATE 47] IMPLICIT SEQUENCE 
+{
+    dependencies [PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    start [PRIVATE 34] IMPLICIT UInt32,
+    end [PRIVATE 34] IMPLICIT UInt32
+}
+ExtendedProtectedDatas ::= [PRIVATE 91] IMPLICIT SEQUENCE OF [PRIVATE 45] IMPLICIT Pio-ExtendedProtectedData
+Pio-ExtendedProtectedData ::= [PRIVATE 45] IMPLICIT SEQUENCE 
+{
+    type [PRIVATE 51] IMPLICIT Extended-Type,
+    dependencies [PRIVATE 71] IMPLICIT Tvb-Control OPTIONAL,
+    data [PRIVATE 50] IMPLICIT Byte-Array256
+}
+Extended-Type ::= [PRIVATE 51] IMPLICIT UInt8
+Module-Item-List ::= [PRIVATE 90] IMPLICIT SEQUENCE OF [PRIVATE 92] EXPLICIT Module-Item
+Module-Item ::= [PRIVATE 92] IMPLICIT Product-Item 
+Transfer-Parameters ::= [PRIVATE 65] IMPLICIT SEQUENCE 
+{
+    transfer-type [PRIVATE 145] EXPLICIT Transfer-Type-Flag,
+    allowed-cmact-IDs [PRIVATE 140] IMPLICIT CmActId-List,
+    max-transfer-depth [PRIVATE 32] IMPLICIT UInt16,
+    allow-return [PRIVATE 193] IMPLICIT BOOLEAN,
+    allow-fi-transfer [PRIVATE 194] IMPLICIT BOOLEAN,
+    to-be-pulled [PRIVATE 195] IMPLICIT BOOLEAN,
+    allowed-ltk-cmact-IDs [PRIVATE 196] IMPLICIT CmActId-List,
+    max-borrow-expiration-time [PRIVATE 123] IMPLICIT UInt32 OPTIONAL
+}
+Transfer-Type-Flag ::= CHOICE 
+{
+    move-complete [PRIVATE 151] IMPLICIT NULL,
+    move-units [PRIVATE 152] IMPLICIT NULL,
+    move-licenses [PRIVATE 153] IMPLICIT NULL,
+    borrow-local-license [PRIVATE 154] IMPLICIT NULL,
+    borrow-complete [PRIVATE 147] IMPLICIT NULL,
+    none [PRIVATE 166] IMPLICIT NULL
+}
+CmActId-List ::= [PRIVATE 140] IMPLICIT SEQUENCE OF [PRIVATE 150] IMPLICIT CmActId
+CmActId ::= [PRIVATE 150] IMPLICIT IA5String 
+
+END

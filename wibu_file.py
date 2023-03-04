@@ -2,20 +2,22 @@
 # -*- coding:utf-8 -*- 
 
 '''
-    wibu file contain *.WibuCmLIF *.WibuCmRaC *.WibuCmRaU
+    仅支持后缀为WibuCmLIF，WibuCmRaC，WibuCmRaU的格式
 '''
 
 import struct
 import common
 import base64
 
-# support *.WibuCmLIF *.WibuCmRaC *.WibuCmRaU
-class wibu_file:
+class WibuFileErr(Exception):
+    pass
+
+class WibuFile:
     def __init__(self, file):
         self.file = file
         self.data = common.read_file(file)
         if(self.data == None):
-            raise(Exception("%s not found" % file))
+            raise WibuFileErr("%s not found" % file)
         
         self.info = {}
         cur_key = ""
@@ -46,6 +48,7 @@ class wibu_file:
             if(type(v) != dict):
                 base64_dec_data = base64.b64decode(v.ljust((len(v)+3)//4*4, "="))        
                 self.asn1_data[k] = self.asn1_dec(base64_dec_data, int(self.info["Info"]["TimeStamp"], 10))
+                
     def asn1_enc(self, data, timestamp):
         return self.asn1_dec(data, timestamp)
         

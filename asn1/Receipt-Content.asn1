@@ -1,0 +1,57 @@
+RECEIPT-CONTENT DEFINITIONS ::= BEGIN
+Receipt-Content ::= [PRIVATE 108] IMPLICIT SEQUENCE 
+{
+    sw-specs [PRIVATE 161] IMPLICIT Software-Specs,
+    clocks [PRIVATE 100] IMPLICIT Clocks OPTIONAL,
+    firmitem-id [PRIVATE 87] IMPLICIT Firmitem-ID,
+    timestamp [PRIVATE 180] IMPLICIT Seconds-Since-2000,
+    flags [PRIVATE 113] IMPLICIT Flags,
+    failure-reason [PRIVATE 149] IMPLICIT Failure-Reason,
+    firm-code [PRIVATE 114] IMPLICIT Firm-Code,
+    firm-update-counter [PRIVATE 187] IMPLICIT UInt32,
+    lt-update-counter [PRIVATE 189] IMPLICIT UInt32,
+    last-cleanup-ltuc [PRIVATE 225] IMPLICIT UInt32,
+    receipt-items [PRIVATE 109] IMPLICIT Receipt-Item-List
+}
+Software-Specs ::= [PRIVATE 161] IMPLICIT SEQUENCE 
+{
+    creator-name [PRIVATE 181] IMPLICIT UTF8String,
+    creator-version [PRIVATE 165] IMPLICIT Format-Version,
+    required-version [PRIVATE 122] IMPLICIT Format-Version
+}
+Format-Version ::= [PRIVATE 122] IMPLICIT SEQUENCE 
+{
+    sfl [PRIVATE 78] IMPLICIT UInt8,
+    sfh [PRIVATE 84] IMPLICIT UInt8,
+    feature-flags [PRIVATE 32] IMPLICIT UInt32
+}
+UInt8 ::= [PRIVATE 31] IMPLICIT OCTET STRING 
+UInt32 ::= [PRIVATE 34] IMPLICIT OCTET STRING 
+Clocks ::= [PRIVATE 100] IMPLICIT SEQUENCE 
+{
+    box-time [PRIVATE 178] IMPLICIT Seconds-Since-2000,
+    certified-time [PRIVATE 179] IMPLICIT Seconds-Since-2000
+}
+Seconds-Since-2000 ::= [PRIVATE 180] IMPLICIT UInt32
+Firmitem-ID ::= [PRIVATE 87] IMPLICIT OCTET STRING 
+Flags ::= [PRIVATE 113] IMPLICIT INTEGER 
+Failure-Reason ::= [PRIVATE 149] IMPLICIT INTEGER 
+Firm-Code ::= [PRIVATE 114] IMPLICIT OCTET STRING
+Receipt-Item-List ::= [PRIVATE 109] IMPLICIT SEQUENCE OF [PRIVATE 110] EXPLICIT Receipt-Item
+Receipt-Item ::= CHOICE 
+{
+    for-pi-p [PRIVATE 111] IMPLICIT Receipt-Item-PI-P,
+    for-pi-t [PRIVATE 112] IMPLICIT Receipt-Item-PI-T
+}
+Receipt-Item-PI-P ::= [PRIVATE 111] IMPLICIT SEQUENCE 
+{
+    product-item-id [PRIVATE 64] IMPLICIT Product-Item-ID
+}
+Product-Item-ID ::= [PRIVATE 64] IMPLICIT OCTET STRING 
+Receipt-Item-PI-T ::= [PRIVATE 112] IMPLICIT SEQUENCE 
+{
+    transfer-id [PRIVATE 197] IMPLICIT Product-Item-ID,
+    last-transfer-id [PRIVATE 224] IMPLICIT Product-Item-ID
+}
+
+END

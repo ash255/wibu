@@ -1,0 +1,17 @@
+CONTENT-PI-T DEFINITIONS ::= BEGIN
+Content-PI-T ::= [PRIVATE 67] IMPLICIT SEQUENCE 
+{
+    transfer-pi-reference [PRIVATE 210] IMPLICIT Transfer-Pi-Reference,
+    actual-transfer-depth [PRIVATE 32] IMPLICIT UInt16
+}
+Transfer-Pi-Reference ::= [PRIVATE 210] IMPLICIT SEQUENCE 
+{
+    firmitem-id-fi-p-or-fi-t [PRIVATE 87] IMPLICIT Firmitem-ID,
+    product-item-id-pi-p-or-pi-t [PRIVATE 64] IMPLICIT Product-Item-ID,
+    transfer-id [PRIVATE 197] IMPLICIT Product-Item-ID
+}
+Firmitem-ID ::= [PRIVATE 87] IMPLICIT OCTET STRING 
+Product-Item-ID ::= [PRIVATE 64] IMPLICIT OCTET STRING 
+UInt16 ::= [PRIVATE 32] IMPLICIT OCTET STRING 
+
+END

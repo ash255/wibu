@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WibuReader</class>
+ <widget class="QMainWindow" name="WibuReader">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Wibu Reader</string>
+  </property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonIconOnly</enum>
+  </property>
+  <property name="animated">
+   <bool>true</bool>
+  </property>
+  <property name="documentMode">
+   <bool>false</bool>
+  </property>
+  <property name="tabShape">
+   <enum>QTabWidget::Rounded</enum>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>修改完后需要点击修复按钮进行应用</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboBox">
+        <property name="minimumSize">
+         <size>
+          <width>160</width>
+          <height>16</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>-1</number>
+      </property>
+      <property name="documentMode">
+       <bool>true</bool>
+      </property>
+      <property name="tabsClosable">
+       <bool>true</bool>
+      </property>
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_file">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <widget class="QMenu" name="menu">
+     <property name="title">
+      <string>导出</string>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>:/icon/Save.ico</normaloff>:/icon/Save.ico</iconset>
+     </property>
+     <addaction name="ASaveAsBin"/>
+     <addaction name="ASaveAsXml"/>
+    </widget>
+    <addaction name="AOpen"/>
+    <addaction name="ASave"/>
+    <addaction name="menu"/>
+    <addaction name="separator"/>
+    <addaction name="AClose"/>
+    <addaction name="AExit"/>
+   </widget>
+   <widget class="QMenu" name="menu_help">
+    <property name="title">
+     <string>帮助</string>
+    </property>
+    <addaction name="AAbout"/>
+   </widget>
+   <widget class="QMenu" name="menu_tools">
+    <property name="title">
+     <string>工具</string>
+    </property>
+    <addaction name="ACodeMeterLinPatch"/>
+    <addaction name="AWbcKey"/>
+   </widget>
+   <widget class="QMenu" name="menu_setting">
+    <property name="title">
+     <string>设置</string>
+    </property>
+    <addaction name="AAuthSetting"/>
+   </widget>
+   <addaction name="menu_file"/>
+   <addaction name="menu_setting"/>
+   <addaction name="menu_tools"/>
+   <addaction name="menu_help"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="tabletTracking">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="AOpen"/>
+   <addaction name="ASave"/>
+   <addaction name="separator"/>
+   <addaction name="AFix"/>
+   <addaction name="AFixRau"/>
+   <addaction name="AAbout"/>
+  </widget>
+  <action name="AOpen">
+   <property name="icon">
+    <iconset resource="toolbar.qrc">
+     <normaloff>:/toolbar/Open.png</normaloff>:/toolbar/Open.png</iconset>
+   </property>
+   <property name="text">
+    <string>打开</string>
+   </property>
+  </action>
+  <action name="AExit">
+   <property name="icon">
+    <iconset resource="toolbar.qrc">
+     <normaloff>:/toolbar/Close.png</normaloff>:/toolbar/Close.png</iconset>
+   </property>
+   <property name="text">
+    <string>退出</string>
+   </property>
+  </action>
+  <action name="ASaveAsBin">
+   <property name="icon">
+    <iconset resource="toolbar.qrc">
+     <normaloff>:/toolbar/Save.png</normaloff>:/toolbar/Save.png</iconset>
+   </property>
+   <property name="text">
+    <string>输出二进制</string>
+   </property>
+  </action>
+  <action name="ASaveAsXml">
+   <property name="icon">
+    <iconset resource="toolbar.qrc">
+     <normaloff>:/toolbar/Save.png</normaloff>:/toolbar/Save.png</iconset>
+   </property>
+   <property name="text">
+    <string>输出xml</string>
+   </property>
+  </action>
+  <action name="ASave">
+   <property name="icon">
+    <iconset resource="toolbar.qrc">
+     <normaloff>:/toolbar/Save.png</normaloff>:/toolbar/Save.png</iconset>
+   </property>
+   <property name="text">
+    <string>保存</string>
+   </property>
+  </action>
+  <action name="AAbout">
+   <property name="icon">
+    <iconset resource="toolbar.qrc">
+     <normaloff>:/toolbar/About.png</normaloff>:/toolbar/About.png</iconset>
+   </property>
+   <property name="text">
+    <string>关于</string>
+   </property>
+  </action>
+  <action name="AFix">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="toolbar.qrc">
+     <normaloff>:/toolbar/CheckFix.png</normaloff>:/toolbar/CheckFix.png</iconset>
+   </property>
+   <property name="text">
+    <string>修复</string>
+   </property>
+   <property name="toolTip">
+    <string>修复</string>
+   </property>
+  </action>
+  <action name="AClose">
+   <property name="icon">
+    <iconset resource="toolbar.qrc">
+     <normaloff>:/toolbar/Break.png</normaloff>:/toolbar/Break.png</iconset>
+   </property>
+   <property name="text">
+    <string>关闭</string>
+   </property>
+  </action>
+  <action name="ACodeMeterLinPatch">
+   <property name="text">
+    <string>CodeMeterLin补丁</string>
+   </property>
+  </action>
+  <action name="AWbcKey">
+   <property name="text">
+    <string>wbc私钥</string>
+   </property>
+  </action>
+  <action name="AAuthSetting">
+   <property name="text">
+    <string>授权设置</string>
+   </property>
+  </action>
+  <action name="AFixRau">
+   <property name="icon">
+    <iconset resource="toolbar.qrc">
+     <normaloff>:/toolbar/CheckRau.png</normaloff>:/toolbar/CheckRau.png</iconset>
+   </property>
+   <property name="text">
+    <string>AFixRau</string>
+   </property>
+   <property name="toolTip">
+    <string>修复RAU文件</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="toolbar.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>AOpen</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>AAbout</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>AExit</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>AFix</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>ASave</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>ASaveAsBin</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>ASaveAsXml</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBox</sender>
+   <signal>activated(int)</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>709</x>
+     <y>76</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tabWidget</sender>
+   <signal>tabCloseRequested(int)</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>399</x>
+     <y>331</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>AClose</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tabWidget</sender>
+   <signal>currentChanged(int)</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>399</x>
+     <y>331</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>ACodeMeterLinPatch</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>AWbcKey</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>AAuthSetting</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>AFixRau</sender>
+   <signal>triggered()</signal>
+   <receiver>WibuReader</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

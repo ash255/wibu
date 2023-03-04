@@ -1,31 +1,37 @@
 # !/usr/bin/env python3
 # -*- coding:utf-8 -*- 
+"""
+    wbc文件处理
+"""
 
 import common
 import configparser
-from SHA256 import SHA256
+from sha256ecdsa import SHA256
 import sys, os, uuid, struct
 
-class wbc_file:
+class WbcFileErr(Exception):
+    pass
+
+class WbcFile:
     def __init__(self, wbc_path=None):
         if(wbc_path != None):
             cf = configparser.ConfigParser()
             
-            wbc_content = common.read_file(wbc_path).replace("\x00", "")
+            wbc_content = common.read_file(wbc_path).replace("\x00", "")#最后多一个\x00导致configparser无法解析
             cf.read_string(wbc_content)
 
             if(not cf.has_section("WIBU-SYSTEMS Control File")):
-                raise(Exception("No WIBU-SYSTEMS Control File Section"))
+                raise WbcFileErr("No WIBU-SYSTEMS Control File Section")
             
             if(not cf.has_section("Inventory")):
-                raise(Exception("No Inventory"))
+                raise WbcFileErr("No Inventory")
         
             self.config = cf
             self.guid = cf.get("WIBU-SYSTEMS Control File", "guid")
             self.nonce = bytes.fromhex(cf.get("Inventory","nonce"))
             self.redundancy_data = cf.get("Inventory","redundancydata")
             self.item_count = cf.getint("Inventory","itemcount")
-            self.part1 = ''
+            self.part1 = ""
             self.part2 = self.get_part2()
             self.part3 = self.get_part3(wbc_path)
             
@@ -80,7 +86,14 @@ class wbc_file:
             h.update(bytes.fromhex(cf.get(item_name,"params")))
             
         h.update(struct.pack("I", int(cf.get("Inventory","itemcount"), 10)))
-        part2 = ''
+        
+        if(cf.has_section("IdList")):
+            list_count = cf.getint("IdList", "ItemCount")
+            h.update(struct.pack("I", list_count))
+            for i in range(list_count):
+                h.update(bytes.fromhex(cf.get("IdList", "ID_%d" % i)))
+
+        part2 = ""
         for i in h.final():
             part2 += "%x" % i
         # print("part2: %s" % part2)
@@ -103,7 +116,7 @@ class wbc_file:
                             part3 += "%x" % i
                         # print("part3: %s" % part3)
                         return part3
-                    
+        return None  
     
     def check_item(self, code, feature):
         pass
@@ -111,25 +124,7 @@ class wbc_file:
     def get_feature_dict(self):
         # codes = [5001,5002,5003,6001,6101,6102,6103,6104,6105,6106,6107,6108,6109,6110,7001,7002,7003,8001,8002,8003,8004,8005,200001,200002,200003]
         codes = [5001,5002,5003,6001,6101,6103,6104,6105,6106,6107,6108,6109,6110,7001,7002,7003,8001,8002,8003,8004,8005,200001,200002,200003]
-        
-        '''
-        return {5001: b'king-ThinkCentre-M920t-N000',
-                5003: b'UUID=474e99e3-6399-4537-bcde-527cf4c5cd5d',
-                6001: b'e0:be:03:1d:2f:9b',
-                6101: b'10SMS0SL00',
-                # 6102: b'ThinkCentre M920t-N000',
-                6103: b'LENOVO',
-                6104: b'SDK0L77769 WIN 3423602108383',
-                6105: b'LENOVO',
-                6106: b'3133',
-                6107: b'09/21/2020',
-                6108: b'LENOVO',
-                6109: b'M1UKT5CA',
-                6110: b'M70GW9G9',
-                8001: b'(69d69)(69d69)(69d69)(69d69)',
-                8005: b'16384|Kingston|9905625-004.A03LF   |643E01DE'}
-        '''
-        
+ 
         feature_dist = {}
         for code in codes:
             feature = self.get_feature(code, feature_dist)
@@ -146,8 +141,8 @@ class wbc_file:
     
     def check(self):
         # only support linux
-        if(not sys.platform.startswith("linux")):
-            raise(Exception("please run in linxu platform"))
+        # if(not sys.platform.startswith("linux")):
+            # raise WbcFileErr("please run in linxu platform")
 
         feature_dist = self.get_feature_dict()
    
@@ -182,15 +177,15 @@ class wbc_file:
             print("all wbc item check ok")
 
             feature_check_ok_h256 = sorted(feature_check_ok_h256, key=lambda feature: feature[0])
-            part1_bin = ''
+            part1_bin = ""
             for it_idx, it_pos, it_len, h256 in feature_check_ok_h256:
                 if(it_len > 0):
                     part1_bin += common.wibu_get_bits(h256, it_len)
             
             
             if(len(part1_bin) != 512):
-                raise(Exception("part1_bin len %d is not 512" % len(part1_bin)))
-            self.part1 = ''
+                raise WbcFileErr("part1_bin len %d is not 512" % len(part1_bin))
+            self.part1 = ""
             # 每8个比特反转一下后输出
             for i in range(0, len(part1_bin), 8):
                 self.part1 += "%x" % int(part1_bin[i:i+8][::-1], 2)
@@ -199,26 +194,27 @@ class wbc_file:
             print("wbc item check failed")
             return False
 
-    def get_private_key(self):
+    def get_private_key(self, config=(False, False, False, True)):
         if(len(self.part1) == 0):
-            raise(Exception("can't get part1, please run check function first"))
-            
-        print("part1: %s" % self.part1)
-        print("part2: %s" % self.part2)
-        print("part3: %s" % self.part3)
+            raise WbcFileErr("can nots get part1, please run check function first")
+
+        # print("part1: %s" % self.part1)
+        # print("part2: %s" % self.part2)
+        # print("part3: %s" % self.part3)
         
-        # data = "[%s-%s]{%s}" % (self.part1, self.part2, self.part3)
-        data = "[%s-%s]" % (self.part1, self.part2)
+        if(config[0] and self.part3 != None):
+            data = "[%s-%s]{%s}" % (self.part1, self.part2, self.part3)
+        else:
+            data = "[%s-%s]" % (self.part1, self.part2)
         h = SHA256()
         h.update(data.encode())
         h.update(struct.pack("I", 0x04000000)) #todo: check it how to get
-        if(False):
+        if(config[1]):
             h.update(b"{1F4C32E0-34BB-414F-B1D6-C8D59E4B8004}\x00")
         else:
-            # another sequence is below
             h.update(b"{EE6E8A94-0B9A-4F58-8C8F-C9DCD01E51A4}\x00")
         
-        if(False):
+        if(config[2]):
             # if running in virtual machine, add it
             h.update(struct.pack("I", 0xAAC0FFEE))
             
@@ -230,10 +226,9 @@ class wbc_file:
         
         h = SHA256()
         h.update(out)
-        if(True):
+        if(config[3]):
             h.update(bytes.fromhex("C3649C300C6444438AB4DFDE047D25E1"))
         else:
-            # another sequence is below
             h.update(bytes.fromhex("122031AE01E743C19EB602076FF482CB"))
         k = h.final()
         # print("k: %s" % k.hex())
@@ -273,7 +268,7 @@ class wbc_file:
             fs = common.fstab()
             if(fs != None):
                 for fs_info in fs:
-                    if(fs_info[1] == '/'):
+                    if(fs_info[1] == "/"):
                         # print("%d: %s" % (code, fs_info[0]))
                         return fs_info[0]
             return fs
@@ -286,58 +281,49 @@ class wbc_file:
             return mac_str
         elif(code == 6101):
             data = common.read_file("/sys/class/dmi/id/product_name")
-            if(data != None):
-                data = data.strip()
-                # print("%d: %s" % (code, data))
-            return data
+            if(data == None or data.startswith("None")):
+                return None
+            return data.strip()
         elif(code == 6102):
             data = common.read_file("/sys/class/dmi/id/product_version")
-            if(data != None):
-                data = data.strip()
-                # print("%d: %s" % (code, data))
-            return data
+            if(data == None or data.startswith("None")):
+                return None
+            return data.strip()
         elif(code == 6103):
             data = common.read_file("/sys/class/dmi/id/sys_vendor")
-            if(data != None):
-                data = data.strip()
-                # print("%d: %s" % (code, data))
-            return data        
+            if(data == None or data.startswith("None")):
+                return None
+            return data.strip()    
         elif(code == 6104):
             data = common.read_file("/sys/class/dmi/id/board_version")
-            if(data != None):
-                data = data.strip()
-                # print("%d: %s" % (code, data))
-            return data          
+            if(data == None or data.startswith("None")):
+                return None
+            return data.strip()       
         elif(code == 6105):
             data = common.read_file("/sys/class/dmi/id/board_vendor")
-            if(data != None):
-                data = data.strip()
-                # print("%d: %s" % (code, data))
-            return data   
+            if(data == None or data.startswith("None")):
+                return None
+            return data.strip()
         elif(code == 6106):
             data = common.read_file("/sys/class/dmi/id/board_name")
-            if(data != None):
-                data = data.strip()
-                # print("%d: %s" % (code, data))
-            return data         
+            if(data == None or data.startswith("None")):
+                return None
+            return data.strip()      
         elif(code == 6107):
             data = common.read_file("/sys/class/dmi/id/bios_date")
-            if(data != None):
-                data = data.strip()
-                # print("%d: %s" % (code, data))
-            return data          
+            if(data == None or data.startswith("None")):
+                return None
+            return data.strip()       
         elif(code == 6108):
             data = common.read_file("/sys/class/dmi/id/bios_vendor")
-            if(data != None):
-                data = data.strip()
-                # print("%d: %s" % (code, data))
-            return data  
+            if(data == None or data.startswith("None")):
+                return None
+            return data.strip()
         elif(code == 6109):
             data = common.read_file("/sys/class/dmi/id/bios_version")
-            if(data != None):
-                data = data.strip()
-                # print("%d: %s" % (code, data))
-            return data  
+            if(data == None or data.startswith("None")):
+                return None
+            return data.strip()
         elif(code == 6110):
             #运行以下三个命令中的一个
             #/usr/bin/codemeter-info -Z d6c11a123ca6b9e6290e1b85542d9a7ebf15a1f8c17e455ebc3ca734292b15e6 (/sys/class/dmi/id/product_serial)
@@ -384,6 +370,9 @@ class wbc_file:
                         model_name = common.read_file("%s/%s/%s" % (root, d, "model_name"))
                         serial_number = common.read_file("%s/%s/%s" % (root, d, "serial_number"))
                         if(manufacturer != None and model_name != None and serial_number != None):
+                            manufacturer = manufacturer.strip()
+                            model_name = model_name.strip()
+                            serial_number = serial_number.strip()
                             return "%s|%s|%s" % (manufacturer, model_name, serial_number)
             return None
         elif(code == 8003):
@@ -411,7 +400,13 @@ class wbc_file:
                         
                         if(idVendor != None and idProduct != None and manufacturer != None and \
                            product != None and serial != None and removable != None):
-                        
+                            idVendor = idVendor.strip()
+                            idProduct = idProduct.strip()
+                            manufacturer = manufacturer.strip()
+                            product = product.strip()
+                            serial = serial.strip()
+                            removable = removable.strip()
+                            
                             ret = "%s%s%s" % (idVendor, idProduct, serial)
                             if(removable == "fixed"):
                                 return ret
@@ -446,16 +441,15 @@ class wbc_file:
             #200003与代码list顺序有关系
             return self.combine_feature(200003, features, [5001,5002,5003,7001,7003,8001,6101,6103,6104,6105,6106,6107,6108,6109,6110,6001,8002,8003,8004,8005])
 
-
 def main():
-    print(wbc_file().get_feature(8002))
-    print(wbc_file().get_feature(8003))
-    print(wbc_file().get_feature(8004))
+    print(WbcFile().get_feature(8002))
+    print(WbcFile().get_feature(8003))
+    print(WbcFile().get_feature(8004))
     # os.system("cp /var/lib/CodeMeter/CmAct/ . -r")
     # os.system("cp /var/spool/ctmp/ . -r")
     
-    # for code, feature in wbc_file().get_feature_dict().items():
+    # for code, feature in WbcFile().get_feature_dict().items():
         # print("%d: %s" % (code, feature))
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 	main()

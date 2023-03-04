@@ -1,0 +1,32 @@
+CONTENT-PI-MERGE DEFINITIONS ::= BEGIN
+Content-PI-Merge ::= [PRIVATE 207] IMPLICIT SEQUENCE 
+{
+    transfer-pi-reference [PRIVATE 210] IMPLICIT Transfer-Pi-Reference,
+    previous-transfer-id [PRIVATE 197] IMPLICIT Product-Item-ID,
+    merge-items [PRIVATE 175] IMPLICIT Merge-Item-List
+}
+Transfer-Pi-Reference ::= [PRIVATE 210] IMPLICIT SEQUENCE 
+{
+    firmitem-id-fi-p-or-fi-t [PRIVATE 87] IMPLICIT Firmitem-ID,
+    product-item-id-pi-p-or-pi-t [PRIVATE 64] IMPLICIT Product-Item-ID,
+    transfer-id [PRIVATE 197] IMPLICIT Product-Item-ID
+}
+Firmitem-ID ::= [PRIVATE 87] IMPLICIT OCTET STRING 
+Product-Item-ID ::= [PRIVATE 64] IMPLICIT OCTET STRING 
+Merge-Item-List ::= [PRIVATE 175] IMPLICIT SEQUENCE OF [PRIVATE 170] EXPLICIT Merge-Item
+Merge-Item ::= [PRIVATE 170] IMPLICIT SEQUENCE 
+{
+    item-reference [PRIVATE 198] IMPLICIT UInt16,
+    unit-counter-rel [PRIVATE 208] IMPLICIT Relative-Value-Change OPTIONAL,
+    license-quantity-rel [PRIVATE 209] IMPLICIT Relative-Value-Change OPTIONAL,
+    borrow-expiration-time [PRIVATE 34] IMPLICIT UInt32 OPTIONAL
+}
+UInt16 ::= [PRIVATE 32] IMPLICIT OCTET STRING 
+Relative-Value-Change ::= [PRIVATE 208] IMPLICIT SEQUENCE 
+{
+    amount [PRIVATE 34] IMPLICIT UInt32,
+    decrease [PRIVATE 1] IMPLICIT BOOLEAN
+}
+UInt32 ::= [PRIVATE 34] IMPLICIT OCTET STRING 
+
+END

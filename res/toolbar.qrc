@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="toolbar">
+    <file>CheckFix.png</file>
+    <file>CheckRau.png</file>
+    <file>Break.png</file>
+    <file>About.png</file>
+    <file>Check.png</file>
+    <file>Close.png</file>
+    <file>Open.png</file>
+    <file>Save.png</file>
+  </qresource>
+</RCC>
